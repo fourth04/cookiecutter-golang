@@ -4,10 +4,10 @@ import (
         "fmt"
         "os"
 
+		"github.com/{{cookiecutter.github_username}}/{{cookiecutter.app_name}}/config"
+		"github.com/{{cookiecutter.github_username}}/{{cookiecutter.app_name}}/log"
         "github.com/spf13/cobra"
 )
-
-var cfgFile string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -33,10 +33,28 @@ func Execute() {
         }
 }
 
-func init() {
-        cobra.OnInitialize()
+func initFlag() {
+	rootCmd.PersistentFlags().StringP("configfile", "c", "", "config file")
+	rootCmd.PersistentFlags().StringP("logfile", "f", "", "log file")
+	rootCmd.PersistentFlags().StringP("loglevel", "l", "INFO", "log level")
+	rootCmd.PersistentFlags().BoolP("json_logs", "j", true, "json logs")
+}
 
-        // Cobra also supports local flags, which will only run
-        // when this action is called directly.
-        // rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+func initConfig() {
+	cfg := config.ConfigPtr()
+	config.ReloadConfigFromFlagSet(cfg, rootCmd.PersistentFlags(), "configfile")
+}
+
+func initLog() {
+	l := log.LogPtr()
+	cfg := config.Config()
+	log.ReloadLogrusLogger(l, cfg)
+}
+
+func init() {
+	initFlag()
+	cobra.OnInitialize(initConfig, initLog)
+
+	// Cobra also supports local flags, which will only run
+	// when this action is called directly.
 }

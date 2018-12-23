@@ -5,6 +5,7 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	{% if cookiecutter.use_viper_config == "y" %}"github.com/{{cookiecutter.github_username}}/{{cookiecutter.app_name}}/config"{% endif %}
+	"github.com/natefinch/lumberjack"
 )
 
 // Logger defines a set of methods for writing application logs. Derived from and
@@ -38,27 +39,24 @@ type Logger interface {
 
 var defaultLogger *logrus.Logger
 
+func Log() Logger {
+	return defaultLogger
+}
+
+func LogPtr() *logrus.Logger {
+	return defaultLogger
+}
+
 func init() {
 	defaultLogger = newLogrusLogger(config.Config())
 }
-
 {% if cookiecutter.use_viper_config == "y" %}
 func NewLogger(cfg config.Provider) *logrus.Logger {
 	return newLogrusLogger(cfg)
 }
-{% else %}
-func NewLogger() *logrus.Logger {
-	return newLogrusLogger()
-}
-{% endif %}
 
-{% if cookiecutter.use_viper_config == "y" %}
 func newLogrusLogger(cfg config.Provider) *logrus.Logger {
-{% else %}
-func newLogrusLogger() *logrus.Logger {
-{% endif %}
 	l := logrus.New()
-	{% if cookiecutter.use_viper_config == "y" %}
 	if cfg.GetBool("json_logs") {
 		l.Formatter = new(logrus.JSONFormatter)
 	}
@@ -74,9 +72,50 @@ func newLogrusLogger() *logrus.Logger {
 	default:
 		l.Level = logrus.DebugLevel
 	}
-	{% endif %}
 	return l
 }
+
+// ReloadLogrusLogger reloads config of a logger
+func ReloadLogrusLogger(l *logrus.Logger, cfg config.Provider) {
+	if cfg.GetBool("json_logs") {
+		l.Formatter = new(logrus.JSONFormatter)
+	}
+
+	if cfg.GetString("logfile") != "" {
+		l.Out = &lumberjack.Logger{
+			Filename:   cfg.GetString("logfile"),
+			MaxSize:    1,
+			MaxBackups: 3,
+			MaxAge:     1,
+			Compress:   true,
+			LocalTime:  true,
+		}
+	} else {
+		l.Out = os.Stdout
+	}
+
+	switch cfg.GetString("loglevel") {
+	case "debug":
+		l.Level = logrus.DebugLevel
+		l.SetReportCaller(true)
+	case "warning":
+		l.Level = logrus.WarnLevel
+	case "info":
+		l.Level = logrus.InfoLevel
+	default:
+		l.Level = logrus.DebugLevel
+	}
+}
+{% else %}
+func NewLogger() *logrus.Logger {
+	return newLogrusLogger()
+}
+
+func newLogrusLogger() *logrus.Logger {
+	l := logrus.New()
+	return l
+}
+{% endif %}
 
 type Fields map[string]interface{}
 
