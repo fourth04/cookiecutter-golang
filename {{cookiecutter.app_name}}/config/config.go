@@ -54,12 +54,6 @@ func readViperConfig(appName string) *viper.Viper {
 	v.SetEnvPrefix(appName)
 	v.AutomaticEnv()
 
-	// global defaults
-	{% if cookiecutter.use_logrus_logging == "y" %}
-	v.SetDefault("json_logs", false)
-	v.SetDefault("loglevel", "debug")
-	{% endif %}
-
 	return v
 }
 
@@ -78,8 +72,12 @@ func ReloadConfigFromFlagSet(v *viper.Viper, flagSet *pflag.FlagSet, cfgFileKey 
 func ReloadConfigFromCfgFile(v *viper.Viper, cfgFile string) {
 	if cfgFile != "" {
 		v.SetConfigFile(cfgFile)
-		v.SetConfigType(filepath.Ext(cfgFile)[1:])
+		if len(filepath.Ext(cfgFile)) < 2 {
+			fmt.Println("Unknown file type: ", cfgFile)
+			os.Exit(1)
+		}
 
+		v.SetConfigType(filepath.Ext(cfgFile)[1:])
 		if err := v.ReadInConfig(); err != nil {
 			fmt.Printf("err:%s\n", err)
 			os.Exit(1)

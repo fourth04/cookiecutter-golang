@@ -36,8 +36,8 @@ func Execute() {
 func initFlag() {
 	rootCmd.PersistentFlags().StringP("configfile", "c", "", "config file")
 	rootCmd.PersistentFlags().StringP("logfile", "f", "", "log file")
-	rootCmd.PersistentFlags().StringP("loglevel", "l", "INFO", "log level")
-	rootCmd.PersistentFlags().BoolP("json_logs", "j", true, "json logs")
+	rootCmd.PersistentFlags().StringP("loglevel", "l", "info", "log level")
+	rootCmd.PersistentFlags().BoolP("json_logs", "j", false, "json logs")
 }
 
 func initConfig() {

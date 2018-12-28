@@ -30,8 +30,8 @@ func main() {
 func initFlag() {
 	pflag.StringP("configfile", "c", "", "config file")
 	pflag.StringP("logfile", "f", "", "log file")
-	pflag.StringP("loglevel", "l", "INFO", "log level")
-	pflag.BoolP("json_logs", "j", true, "json logs")
+	pflag.StringP("loglevel", "l", "info", "log level")
+	pflag.BoolP("json_logs", "j", false, "json logs")
 	versionFlag := pflag.BoolP("version", "v", false, "Version")
 	pflag.Parse()
 
