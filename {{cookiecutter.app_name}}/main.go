@@ -6,15 +6,10 @@ import (
 	{% else %}
 	"fmt"
 	"os"
-	"github.com/{{cookiecutter.github_username}}/{{cookiecutter.app_name}}/version"
-	{% if ((cookiecutter.use_viper_config == "y") and
-			(cookiecutter.use_logrus_logging == "y")) %}
-	"github.com/{{cookiecutter.github_username}}/{{cookiecutter.app_name}}/config"
-	"github.com/{{cookiecutter.github_username}}/{{cookiecutter.app_name}}/logger"
 	"github.com/spf13/pflag"
-	{% else %}
-	"flag"
-	{% endif %}
+	"github.com/{{cookiecutter.github_username}}/{{cookiecutter.app_name}}/version"
+	{% if cookiecutter.use_logrus_logging == "y" %}"github.com/{{cookiecutter.github_username}}/{{cookiecutter.app_name}}/logger"{% endif %}
+	{% if cookiecutter.use_viper_config == "y" %}"github.com/{{cookiecutter.github_username}}/{{cookiecutter.app_name}}/config"{% endif %}
 	{% endif %}
 )
 
@@ -25,13 +20,61 @@ func main() {
 
 }
 {% else %}
-{% if ((cookiecutter.use_viper_config == "y") and
-			(cookiecutter.use_logrus_logging == "y")) %}
+	{% if cookiecutter.use_logrus_logging == "y" %}
 func initFlag() {
-	pflag.StringP("configfile", "c", "", "config file")
+	{% if cookiecutter.use_viper_config == "y" %}pflag.StringP("configfile", "c", "", "config file"){% endif %}
 	pflag.StringP("logfile", "f", "", "log file")
 	pflag.StringP("loglevel", "l", "info", "log level")
 	pflag.BoolP("json_logs", "j", false, "json logs")
+	versionFlag := pflag.BoolP("version", "v", false, "Version")
+	pflag.Parse()
+
+	if *versionFlag {
+		fmt.Println("Build Date:", version.BuildDate)
+		fmt.Println("Git Commit:", version.GitCommit)
+		fmt.Println("Version:", version.Version)
+		fmt.Println("Go Version:", version.GoVersion)
+		fmt.Println("OS / Arch:", version.OsArch)
+		os.Exit(0)
+	}
+}
+		{% if cookiecutter.use_viper_config == "y" %}
+func initConfig() {
+	cfg := config.ConfigPtr()
+	config.ReloadConfigFromFlagSet(cfg, pflag.CommandLine, "configfile")
+}
+
+func initLog() {
+	l := logger.LogPtr()
+	cfg := config.Config()
+	logger.ReloadLogrusLoggerFromConfig(l, cfg)
+}
+
+func init() {
+	initFlag()
+	initConfig()
+	initLog()
+}
+		{% else %}
+func initLog() {
+	l := logger.LogPtr()
+	logger.ReloadLogrusLoggerFromFlagSet(l, pflag.CommandLine)
+}
+
+func init() {
+	initFlag()
+	initLog()
+}
+		{% endif %}
+func main() {
+
+	fmt.Println("Hello.")
+
+}
+	{% else %}
+		{% if cookiecutter.use_viper_config == "y" %}
+func initFlag() {
+	pflag.StringP("configfile", "c", "", "config file")
 	versionFlag := pflag.BoolP("version", "v", false, "Version")
 	pflag.Parse()
 
@@ -50,16 +93,9 @@ func initConfig() {
 	config.ReloadConfigFromFlagSet(cfg, pflag.CommandLine, "configfile")
 }
 
-func initLog() {
-	l := logger.LogPtr()
-	cfg := config.Config()
-	logger.ReloadLogrusLogger(l, cfg)
-}
-
 func init() {
 	initFlag()
 	initConfig()
-	initLog()
 }
 
 func main() {
@@ -67,11 +103,11 @@ func main() {
 	fmt.Println("Hello.")
 
 }
-{% else %}
+		{% else %}
 func main() {
 
-	versionFlag := flag.Bool("version", false, "Version")
-	flag.Parse()
+	versionFlag := pflag.BoolP("version", "v", false, "Version")
+	pflag.Parse()
 
 	if *versionFlag {
 		fmt.Println("Build Date:", version.BuildDate)
@@ -83,5 +119,6 @@ func main() {
 	}
 	fmt.Println("Hello.")
 }
-{% endif %}
+		{% endif %}
+	{% endif %}
 {% endif %}

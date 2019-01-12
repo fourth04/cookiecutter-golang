@@ -4,7 +4,7 @@ import (
 	"os"
 
 	"github.com/Sirupsen/logrus"
-	{% if cookiecutter.use_viper_config == "y" %}"github.com/{{cookiecutter.github_username}}/{{cookiecutter.app_name}}/config"{% endif %}
+	{% if cookiecutter.use_viper_config == "y" %}"github.com/{{cookiecutter.github_username}}/{{cookiecutter.app_name}}/config"{% else %}"github.com/spf13/pflag"{% endif %}
 	"github.com/natefinch/lumberjack"
 )
 
@@ -46,11 +46,11 @@ func Log() Logger {
 func LogPtr() *logrus.Logger {
 	return defaultLogger
 }
-
+{% if cookiecutter.use_viper_config == "y" %}
 func init() {
 	defaultLogger = newLogrusLogger(config.Config())
 }
-{% if cookiecutter.use_viper_config == "y" %}
+
 func NewLogger(cfg config.Provider) *logrus.Logger {
 	return newLogrusLogger(cfg)
 }
@@ -60,7 +60,19 @@ func newLogrusLogger(cfg config.Provider) *logrus.Logger {
 	if cfg.GetBool("json_logs") {
 		l.Formatter = new(logrus.JSONFormatter)
 	}
-	l.Out = os.Stderr
+
+	if cfg.GetString("logfile") != "" {
+		l.Out = &lumberjack.Logger{
+			Filename:   cfg.GetString("logfile"),
+			MaxSize:    1,
+			MaxBackups: 3,
+			MaxAge:     1,
+			Compress:   true,
+			LocalTime:  true,
+		}
+	} else {
+		l.Out = os.Stdout
+	}
 
 	switch cfg.GetString("loglevel") {
 	case "debug":
@@ -83,7 +95,7 @@ func newLogrusLogger(cfg config.Provider) *logrus.Logger {
 }
 
 // ReloadLogrusLogger reloads config of a logger
-func ReloadLogrusLogger(l *logrus.Logger, cfg config.Provider) {
+func ReloadLogrusLoggerFromConfig(l *logrus.Logger, cfg config.Provider) {
 	if cfg.GetBool("json_logs") {
 		l.Formatter = new(logrus.JSONFormatter)
 	}
@@ -120,6 +132,10 @@ func ReloadLogrusLogger(l *logrus.Logger, cfg config.Provider) {
 	}
 }
 {% else %}
+func init() {
+	defaultLogger = newLogrusLogger()
+}
+
 func NewLogger() *logrus.Logger {
 	return newLogrusLogger()
 }
@@ -127,6 +143,47 @@ func NewLogger() *logrus.Logger {
 func newLogrusLogger() *logrus.Logger {
 	l := logrus.New()
 	return l
+}
+
+// ReloadLogrusLogger reloads logger config
+func ReloadLogrusLoggerFromFlagSet(l *logrus.Logger, flagSet *pflag.FlagSet) {
+	if jsonLogs, err := flagSet.GetBool("json_logs"); (err == nil) && jsonLogs {
+		l.Formatter = new(logrus.JSONFormatter)
+	}
+
+	if logFile, err := flagSet.GetString("logfile"); (err == nil) && (logFile != "") {
+		l.Formatter = new(logrus.JSONFormatter)
+		l.Out = &lumberjack.Logger{
+			Filename:   logFile,
+			MaxSize:    1,
+			MaxBackups: 3,
+			MaxAge:     1,
+			Compress:   true,
+			LocalTime:  true,
+		}
+	} else {
+		l.Out = os.Stdout
+	}
+
+	if logLevel, err := flagSet.GetString("loglevel"); (err == nil) && (logLevel != "") {
+		switch logLevel {
+		case "debug":
+			l.Level = logrus.DebugLevel
+			l.SetReportCaller(true)
+		case "info":
+			l.Level = logrus.InfoLevel
+		case "warn":
+			l.Level = logrus.WarnLevel
+		case "error":
+			l.Level = logrus.ErrorLevel
+		case "fatal":
+			l.Level = logrus.FatalLevel
+		case "panic":
+			l.Level = logrus.PanicLevel
+		default:
+			l.Level = logrus.InfoLevel
+		}
+	}
 }
 {% endif %}
 

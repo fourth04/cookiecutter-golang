@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/spf13/pflag"
+	{% if cookiecutter.use_logrus_logging == "y" %}"github.com/spf13/pflag"{% endif %}
 	"github.com/spf13/viper"
 )
 

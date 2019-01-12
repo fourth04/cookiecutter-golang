@@ -1,15 +1,12 @@
 package cmd
 
 import (
-        "fmt"
-        "os"
-
-		"github.com/{{cookiecutter.github_username}}/{{cookiecutter.app_name}}/config"
-		"github.com/{{cookiecutter.github_username}}/{{cookiecutter.app_name}}/logger"
-        "github.com/spf13/cobra"
+	"fmt"
+	"os"
+	{% if cookiecutter.use_logrus_logging == "y" %}"github.com/{{cookiecutter.github_username}}/{{cookiecutter.app_name}}/logger"{% endif %}
+	{% if cookiecutter.use_viper_config == "y" %}"github.com/{{cookiecutter.github_username}}/{{cookiecutter.app_name}}/config"{% endif %}
+	"github.com/spf13/cobra"
 )
-
-var log = logger.Log()
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -34,14 +31,16 @@ func Execute() {
                 os.Exit(1)
         }
 }
+{% if cookiecutter.use_logrus_logging == "y" %}
+var log = logger.Log()
 
 func initFlag() {
-	rootCmd.PersistentFlags().StringP("configfile", "c", "", "config file")
+	{% if cookiecutter.use_viper_config == "y" %}rootCmd.PersistentFlags().StringP("configfile", "c", "", "config file"){% endif %}
 	rootCmd.PersistentFlags().StringP("logfile", "f", "", "log file")
 	rootCmd.PersistentFlags().StringP("loglevel", "l", "info", "log level")
 	rootCmd.PersistentFlags().BoolP("json_logs", "j", false, "json logs")
 }
-
+	{% if cookiecutter.use_viper_config == "y" %}
 func initConfig() {
 	cfg := config.ConfigPtr()
 	config.ReloadConfigFromFlagSet(cfg, rootCmd.PersistentFlags(), "configfile")
@@ -50,7 +49,7 @@ func initConfig() {
 func initLog() {
 	l := logger.LogPtr()
 	cfg := config.Config()
-	logger.ReloadLogrusLogger(l, cfg)
+	logger.ReloadLogrusLoggerFromConfig(l, cfg)
 }
 
 func init() {
@@ -60,3 +59,34 @@ func init() {
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
 }
+	{% else %}
+func initLog() {
+	l := logger.LogPtr()
+	logger.ReloadLogrusLoggerFromFlagSet(l, rootCmd.PersistentFlags())
+}
+
+func init() {
+	initFlag()
+	cobra.OnInitialize(initLog)
+
+	// Cobra also supports local flags, which will only run
+	// when this action is called directly.
+}
+	{% endif %}
+{% else %}
+	{% if cookiecutter.use_viper_config == "y" %}
+func initFlag() {
+	rootCmd.PersistentFlags().StringP("configfile", "c", "", "config file")
+}
+
+func initConfig() {
+	cfg := config.ConfigPtr()
+	config.ReloadConfigFromFlagSet(cfg, rootCmd.PersistentFlags(), "configfile")
+}
+
+func init() {
+	initFlag()
+	cobra.OnInitialize(initConfig)
+}
+	{% endif %}
+{% endif %}

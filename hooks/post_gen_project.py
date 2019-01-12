@@ -58,7 +58,7 @@ def remove_logrus_files():
     Removes files needed for viper config utils
     """
     shutil.rmtree(os.path.join(
-        PROJECT_DIRECTORY, "log"
+        PROJECT_DIRECTORY, "logger"
     ))
 
 def remove_cobra_files():

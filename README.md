@@ -96,3 +96,20 @@ $ ./bin/echoserver
 ## Projects build with cookiecutter-golang
 
 - [iothub](https://github.com/lacion/iothub) websocket multiroom server for IoT
+
+## 补充说明
+
+`注意`：
+
+- 本脚手架默认使用读取参数的方式是pflag，后期考虑加入flag的识别
+- 有两个组件是耦合在一起的，use_logrus_logging和use_viper_config，两两组合的话，总共有4种可能：
+
+1. use_logrus_logging [y] and use_viper_config [y]，这种情况，将pflag解析到的所有命令行参数绑定到：viper_config，如果有configfile参数，viper_config还会读取该参数对应的配置文件（`注意`：按照这个读取顺序，配置文件中的配置项会覆盖掉命令行中的配置项，比如：json_logs/loglevel/logfile），再用总的配置信息来重置logrus_logging
+2. use_logrus_logging [y] and use_viper_config [n]，这种情况，将pflag解析到的所有命令行的参数传给logrus_logging，logrus_logging的时候会根据三个参数来重置配置——json_logs/loglevel/logfile
+3. use_logrus_logging [n] and use_viper_config [y]，这种情况，参考情况1，只是不去重置logrus_logging
+3. use_logrus_logging [n] and use_viper_config [n]，两个模块都不用的情况
+
+只有两种方式读取配置信息：
+
+1. 通过pflag解析命令行参数
+2. 通过配置文件

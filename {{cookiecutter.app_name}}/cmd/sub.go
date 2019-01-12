@@ -1,9 +1,9 @@
 package cmd
 
 import (
-	"github.com/{{cookiecutter.github_username}}/{{cookiecutter.app_name}}/logger"
-	"github.com/{{cookiecutter.github_username}}/{{cookiecutter.app_name}}/config"
+	"fmt"
 	"github.com/spf13/cobra"
+	{% if cookiecutter.use_viper_config == "y" %}"github.com/{{cookiecutter.github_username}}/{{cookiecutter.app_name}}/config"{% endif %}
 )
 
 // subCmd represents the parse command
@@ -27,8 +27,9 @@ func init() {
 }
 
 func subCmdMain(cmd *cobra.Command, args []string) {
-	log.Info(cmd.Flags())
+	{% if cookiecutter.use_viper_config == "y" %}
 	cfg := config.ConfigPtr()
-	config.ReloadConfigFromFlagSet(cfg, cmd.Flags(), "configfile")
-	log.Info(cfg.AllSettings())
+	config.ReloadConfigFromFlagSet(cfg, cmd.Flags(), "")
+	{% endif %}
+	fmt.Println("Hello.")
 }
