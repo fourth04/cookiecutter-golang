@@ -1,4 +1,4 @@
-package log
+package logger
 
 import (
 	"os"
@@ -65,12 +65,19 @@ func newLogrusLogger(cfg config.Provider) *logrus.Logger {
 	switch cfg.GetString("loglevel") {
 	case "debug":
 		l.Level = logrus.DebugLevel
-	case "warning":
-		l.Level = logrus.WarnLevel
+		l.SetReportCaller(true)
 	case "info":
 		l.Level = logrus.InfoLevel
+	case "warn":
+		l.Level = logrus.WarnLevel
+	case "error":
+		l.Level = logrus.ErrorLevel
+	case "fatal":
+		l.Level = logrus.FatalLevel
+	case "panic":
+		l.Level = logrus.PanicLevel
 	default:
-		l.Level = logrus.DebugLevel
+		l.Level = logrus.InfoLevel
 	}
 	return l
 }
@@ -98,12 +105,18 @@ func ReloadLogrusLogger(l *logrus.Logger, cfg config.Provider) {
 	case "debug":
 		l.Level = logrus.DebugLevel
 		l.SetReportCaller(true)
-	case "warning":
-		l.Level = logrus.WarnLevel
 	case "info":
 		l.Level = logrus.InfoLevel
+	case "warn":
+		l.Level = logrus.WarnLevel
+	case "error":
+		l.Level = logrus.ErrorLevel
+	case "fatal":
+		l.Level = logrus.FatalLevel
+	case "panic":
+		l.Level = logrus.PanicLevel
 	default:
-		l.Level = logrus.DebugLevel
+		l.Level = logrus.InfoLevel
 	}
 }
 {% else %}

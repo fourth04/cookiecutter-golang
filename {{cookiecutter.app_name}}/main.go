@@ -10,7 +10,7 @@ import (
 	{% if ((cookiecutter.use_viper_config == "y") and
 			(cookiecutter.use_logrus_logging == "y")) %}
 	"github.com/{{cookiecutter.github_username}}/{{cookiecutter.app_name}}/config"
-	"github.com/{{cookiecutter.github_username}}/{{cookiecutter.app_name}}/log"
+	"github.com/{{cookiecutter.github_username}}/{{cookiecutter.app_name}}/logger"
 	"github.com/spf13/pflag"
 	{% else %}
 	"flag"
@@ -51,9 +51,9 @@ func initConfig() {
 }
 
 func initLog() {
-	l := log.LogPtr()
+	l := logger.LogPtr()
 	cfg := config.Config()
-	log.ReloadLogrusLogger(l, cfg)
+	logger.ReloadLogrusLogger(l, cfg)
 }
 
 func init() {

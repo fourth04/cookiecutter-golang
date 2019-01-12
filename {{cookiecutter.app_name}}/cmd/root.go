@@ -5,9 +5,11 @@ import (
         "os"
 
 		"github.com/{{cookiecutter.github_username}}/{{cookiecutter.app_name}}/config"
-		"github.com/{{cookiecutter.github_username}}/{{cookiecutter.app_name}}/log"
+		"github.com/{{cookiecutter.github_username}}/{{cookiecutter.app_name}}/logger"
         "github.com/spf13/cobra"
 )
+
+var log = logger.Log()
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -46,9 +48,9 @@ func initConfig() {
 }
 
 func initLog() {
-	l := log.LogPtr()
+	l := logger.LogPtr()
 	cfg := config.Config()
-	log.ReloadLogrusLogger(l, cfg)
+	logger.ReloadLogrusLogger(l, cfg)
 }
 
 func init() {
