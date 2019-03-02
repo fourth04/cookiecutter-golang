@@ -77,14 +77,6 @@ def remove_circleci_files():
         PROJECT_DIRECTORY, ".circleci"
     ))
 
-def remove_gorm_files():
-    """
-    Removes files needed for gorm utils
-    """
-    shutil.rmtree(os.path.join(
-        PROJECT_DIRECTORY, "model"
-    ))
-
 # 1. Remove Dockerfiles if docker is not going to be used
 if '{{ cookiecutter.use_docker }}'.lower() != 'y':
     remove_docker_files()
@@ -121,7 +113,3 @@ if '{{ cookiecutter.go_mod_or_dep}}'.lower() == 'mod':
     remove_file("Gopkg.toml")
 else:
     remove_file("go.mod")
-
-# 8. Remove db utils if not selectd
-if '{{ cookiecutter.use_gorm_orm}}'.lower() != 'y':
-    remove_gorm_files()

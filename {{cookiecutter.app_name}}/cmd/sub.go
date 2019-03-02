@@ -28,6 +28,7 @@ func init() {
 
 func subCmdMain(cmd *cobra.Command, args []string) {
 	{% if cookiecutter.use_viper_config == "y" %}
+	// binding sub command flags to cfg
 	cfg := config.ConfigPtr()
 	config.ReloadConfigFromFlagSet(cfg, cmd.Flags(), "")
 	{% endif %}
